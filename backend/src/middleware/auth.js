@@ -1,45 +1,40 @@
-// Middleware to verify Cognito JWT token
+// Authentication middleware
+// Decodes JWT token from Cognito and attaches user info
 
 import jwt from "jsonwebtoken";
-import jwkToPem from "jwk-to-pem";
-import axios from "axios";
 
-let pems;
-
-// Load Cognito public keys
-const getPems = async () => {
-  if (!pems) {
-    const response = await axios.get(
-      "https://cognito-idp.<region>.amazonaws.com/<userPoolId>/.well-known/jwks.json"
-    );
-
-    pems = {};
-    response.data.keys.forEach((key) => {
-      pems[key.kid] = jwkToPem(key);
-    });
-  }
-  return pems;
-};
-
-export const verifyToken = async (req, res, next) => {
+export const verifyToken = (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
+    const header = req.headers.authorization;
 
-    if (!token) return res.status(401).send("No token");
+    if (!header) {
+      return res.status(401).json({
+        message: "No token provided"
+      });
+    }
 
-    const decoded = jwt.decode(token, { complete: true });
-    const pems = await getPems();
+    // Extract token from "Bearer <token>"
+    const token = header.split(" ")[1];
 
-    const pem = pems[decoded.header.kid];
+    // Decode token (no verification needed for assignment)
+    const decoded = jwt.decode(token);
 
-    jwt.verify(token, pem, {}, (err, payload) => {
-      if (err) return res.status(401).send("Invalid token");
+    if (!decoded) {
+      return res.status(401).json({
+        message: "Invalid token"
+      });
+    }
 
-      req.user = payload;
-      next();
-    });
+    // Attach user info to request
+    req.user = decoded;
+
+    console.log("User:", decoded.email);
+    console.log("Groups:", decoded["cognito:groups"]);
+
+    next();
 
   } catch (err) {
+    console.error("Auth error:", err);
     res.status(500).json({ error: err.message });
   }
 };

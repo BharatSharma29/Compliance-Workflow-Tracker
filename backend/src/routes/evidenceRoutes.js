@@ -1,4 +1,5 @@
 // Routes for Evidence Requests
+// Includes authentication + RBAC + file upload
 
 import express from "express";
 import {
@@ -9,23 +10,51 @@ import {
 } from "../controllers/evidenceController.js";
 
 import { verifyToken } from "../middleware/auth.js";
+import { authorize } from "../middleware/role.js";
 import { upload } from "../middleware/upload.js";
 
 const router = express.Router();
 
-// Create request
-router.post("/", verifyToken, createEvidenceRequest);
+/**
+ * CREATE EVIDENCE REQUEST
+ * Allowed roles: Admin, Manager
+ */
+router.post(
+  "/",
+  verifyToken,
+  authorize(["Admin", "Manager"]),
+  createEvidenceRequest
+);
 
-// Get all requests
-router.get("/", verifyToken, getEvidenceRequests);
+/**
+ * GET ALL REQUESTS
+ * Any authenticated user can view
+ */
+router.get(
+  "/",
+  verifyToken,
+  getEvidenceRequests
+);
 
-// Update workflow status
-router.put("/:requestId/status", verifyToken, updateStatus);
+/**
+ * UPDATE STATUS (WORKFLOW)
+ * Allowed roles: Admin, Auditor
+ */
+router.put(
+  "/:requestId/status",
+  verifyToken,
+  authorize(["Admin", "Auditor"]),
+  updateStatus
+);
 
-// Upload file to S3
+/**
+ * UPLOAD FILE (S3)
+ * Allowed roles: Admin, Manager, User
+ */
 router.post(
   "/upload",
   verifyToken,
+  authorize(["Admin", "Manager", "User"]),
   upload.single("file"),
   uploadEvidenceFile
 );
