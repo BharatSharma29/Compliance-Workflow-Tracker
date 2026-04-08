@@ -1,5 +1,4 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 
 function ControlForm({ onCreate }) {
   const [form, setForm] = useState({
@@ -10,12 +9,6 @@ function ControlForm({ onCreate }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (!form.title || !form.framework || !form.frequency) {
-      alert("All fields are required");
-      return;
-    }
-
     onCreate(form);
 
     setForm({
@@ -30,7 +23,6 @@ function ControlForm({ onCreate }) {
       <h3>Create Control</h3>
 
       <input
-        type="text"
         placeholder="Title"
         value={form.title}
         onChange={(e) =>
@@ -39,8 +31,7 @@ function ControlForm({ onCreate }) {
       />
 
       <input
-        type="text"
-        placeholder="Framework (ISO27001, GDPR)"
+        placeholder="Framework"
         value={form.framework}
         onChange={(e) =>
           setForm({ ...form, framework: e.target.value })
@@ -48,8 +39,7 @@ function ControlForm({ onCreate }) {
       />
 
       <input
-        type="text"
-        placeholder="Frequency (monthly / quarterly)"
+        placeholder="Frequency"
         value={form.frequency}
         onChange={(e) =>
           setForm({ ...form, frequency: e.target.value })

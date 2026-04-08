@@ -1,11 +1,14 @@
-// Role-Based Access Control (RBAC)
+// Role-based access using Cognito groups
 
 export const authorize = (roles) => {
   return (req, res, next) => {
-    const userRole = req.user.role;
+    const userGroups = req.user["cognito:groups"] || [];
 
-    // Check if user role is allowed
-    if (!roles.includes(userRole)) {
+    const hasRole = roles.some((role) =>
+      userGroups.includes(role)
+    );
+
+    if (!hasRole) {
       return res.status(403).json({ message: "Forbidden" });
     }
 

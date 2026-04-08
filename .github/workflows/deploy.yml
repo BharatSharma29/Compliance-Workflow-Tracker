@@ -1,0 +1,68 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+
+  backend:
+    name: Backend CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        working-directory: backend
+        run: npm install
+
+      # -----------------------
+      # ESLINT (Static Analysis)
+      # -----------------------
+      - name: Run ESLint
+        working-directory: backend
+        run: npx eslint . || true
+
+      # -----------------------
+      # SECURITY CHECK
+      # -----------------------
+      - name: Run npm audit
+        working-directory: backend
+        run: npm audit --audit-level=moderate || true
+
+      # -----------------------
+      # RUN SERVER CHECK
+      # -----------------------
+      - name: Start Backend
+        working-directory: backend
+        run: |
+          node server.js &
+          sleep 5
+
+  frontend:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: npm run build

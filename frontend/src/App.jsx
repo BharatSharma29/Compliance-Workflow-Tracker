@@ -10,11 +10,13 @@ function App() {
     <Router>
       <Navbar />
 
-      <Routes>
-        <Route path="/" element={<Controls />} />
-        <Route path="/evidence" element={<EvidenceRequests />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
+      <div className="container">
+        <Routes>
+          <Route path="/" element={<Controls />} />
+          <Route path="/evidence" element={<EvidenceRequests />} />
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </div>
     </Router>
   );
 }

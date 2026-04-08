@@ -1,5 +1,5 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getEvidence, createEvidence, uploadFile } from "../services/api";
 
 function EvidenceRequests() {
   const [requests, setRequests] = useState([]);
@@ -9,58 +9,50 @@ function EvidenceRequests() {
     dueDate: ""
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (!form.controlId || !form.assignedTo || !form.dueDate) {
-      alert("All fields required");
-      return;
-    }
-
-    const newRequest = {
-      requestId: Date.now(),
-      controlId: form.controlId,
-      assignedTo: form.assignedTo,
-      dueDate: form.dueDate,
-      status: "Draft"
-    };
-
-    setRequests([...requests, newRequest]);
-
-    setForm({
-      controlId: "",
-      assignedTo: "",
-      dueDate: ""
-    });
+  // Fetch all evidence requests
+  const fetchData = async () => {
+    const res = await getEvidence();
+    setRequests(res.data);
   };
 
-  const updateStatus = (id, newStatus) => {
-    const updated = requests.map((r) =>
-      r.requestId === id ? { ...r, status: newStatus } : r
-    );
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-    setRequests(updated);
+  // Create request
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await createEvidence(form);
+    fetchData();
+  };
+
+  // Handle file upload
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await uploadFile(formData);
+
+    alert("File uploaded: " + res.data.fileUrl);
   };
 
   return (
     <div>
       <h2>Evidence Requests</h2>
 
-      {/* FORM */}
+      {/* CREATE REQUEST */}
       <form onSubmit={handleSubmit}>
         <input
-          type="text"
           placeholder="Control ID"
-          value={form.controlId}
           onChange={(e) =>
             setForm({ ...form, controlId: e.target.value })
           }
         />
 
         <input
-          type="text"
           placeholder="Assigned To"
-          value={form.assignedTo}
           onChange={(e) =>
             setForm({ ...form, assignedTo: e.target.value })
           }
@@ -68,11 +60,13 @@ function EvidenceRequests() {
 
         <input
           type="date"
-          value={form.dueDate}
           onChange={(e) =>
             setForm({ ...form, dueDate: e.target.value })
           }
         />
+
+        {/* FILE UPLOAD */}
+        <input type="file" onChange={handleFileUpload} />
 
         <button type="submit">Create Request</button>
       </form>
@@ -81,21 +75,7 @@ function EvidenceRequests() {
       <ul>
         {requests.map((r) => (
           <li key={r.requestId}>
-            <strong>Control:</strong> {r.controlId} |{" "}
-            <strong>User:</strong> {r.assignedTo} |{" "}
-            <strong>Status:</strong> {r.status}
-
-            <div>
-              <button onClick={() => updateStatus(r.requestId, "Submitted")}>
-                Submit
-              </button>
-              <button onClick={() => updateStatus(r.requestId, "Approved")}>
-                Approve
-              </button>
-              <button onClick={() => updateStatus(r.requestId, "Rejected")}>
-                Reject
-              </button>
-            </div>
+            <strong>{r.controlId}</strong> | {r.status} | Risk: {r.riskScore}
           </li>
         ))}
       </ul>
