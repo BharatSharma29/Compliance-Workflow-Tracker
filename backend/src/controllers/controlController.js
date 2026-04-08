@@ -1,90 +1,17 @@
-// // import { v4 as uuid } from "uuid";
-// // import { putItem, getItems } from "../services/dynamoService.js";
-
-// // export const createControl = async (req, res) => {
-// //   try {
-// //     const { title, framework, frequency } = req.body;
-
-// //     const control = {
-// //       controlId: uuid(),
-// //       title,
-// //       framework,
-// //       frequency,
-// //       createdAt: new Date().toISOString()
-// //     };
-
-// //     // await putItem({
-// //     //   TableName: process.env.DYNAMO_TABLE_CONTROLS,
-// //     //   Item: control
-// //     // });
-// //     console.log("Saving control (mock):", control);
-
-// //     res.status(201).json(control);
-// //   } catch (err) {
-// //     res.status(500).json({ error: err.message });
-// //   }
-// // };
-
-// // export const getControls = async (req, res) => {
-// //   try {
-// //     const controls = await getItems({
-// //       TableName: process.env.DYNAMO_TABLE_CONTROLS
-// //     });
-
-// //     res.json(controls);
-// //   } catch (err) {
-// //     res.status(500).json({ error: err.message });
-// //   }
-// // };
-
-// import { v4 as uuid } from "uuid";
-
-// // TEMP in-memory storage
-// let controls = [];
-
-// export const createControl = async (req, res) => {
-//   try {
-//     const { title, framework, frequency } = req.body;
-
-//     const control = {
-//       controlId: uuid(),
-//       title,
-//       framework,
-//       frequency,
-//       createdAt: new Date().toISOString()
-//     };
-
-//     controls.push(control);
-
-//     res.status(201).json(control);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// export const getControls = async (req, res) => {
-//   try {
-//     res.json(controls);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// Controller handles business logic for controls
+// Controller using custom library
 
 import { v4 as uuid } from "uuid";
+import { putItem, getItems } from "../services/dynamoService.js";
 
-// TEMP: In-memory storage (used instead of database for local testing)
-let controls = [];
+// Import your custom library
+import { PolicyEngine } from "../../../library/compliance-policy-sdk/index.js";
 
-// Create a new control
+const policy = new PolicyEngine();
+
 export const createControl = async (req, res) => {
   try {
     const { title, framework, frequency } = req.body;
 
-    // Create control object
     const control = {
       controlId: uuid(),
       title,
@@ -93,24 +20,39 @@ export const createControl = async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    // Save to memory
-    controls.push(control);
+    // Create audit log using library
+    const auditEvent = policy.createAudit(
+      "CREATE_CONTROL",
+      control.controlId,
+      req.user.id
+    );
 
-    // Return created control
+    console.log("Audit Event:", auditEvent);
+
+    // Save to DynamoDB
+    await putItem({
+      TableName: process.env.DYNAMO_TABLE_CONTROLS || "Controls",
+      Item: control
+    });
+
     res.status(201).json(control);
 
   } catch (err) {
-    console.error("Error creating control:", err);
+    console.error("Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// Get all controls
 export const getControls = async (req, res) => {
   try {
+    const controls = await getItems({
+      TableName: process.env.DYNAMO_TABLE_CONTROLS || "Controls"
+    });
+
     res.json(controls);
+
   } catch (err) {
-    console.error("Error fetching controls:", err);
+    console.error("Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
