@@ -1,4 +1,4 @@
-// Export all library modules
+// ES Module exports (FIXED)
 
 export { WorkflowStateMachine } from "./WorkflowStateMachine.js";
 export { RiskScorer } from "./RiskScorer.js";

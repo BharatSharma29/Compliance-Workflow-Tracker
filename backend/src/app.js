@@ -13,8 +13,8 @@ app.get("/", (req, res) => {
   res.send("Compliance API running on EC2 🚀");
 });
 
-// Routes
+// ROUTES
 app.use("/api/controls", controlRoutes);
-app.use("/api/evidence", evidenceRoutes); // 👈 MUST EXIST
+app.use("/api/evidence", evidenceRoutes);
 
 export default app;

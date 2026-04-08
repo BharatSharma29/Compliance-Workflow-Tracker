@@ -19,31 +19,27 @@ export const createEvidenceRequest = async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    // Risk calculation
     request.riskScore = policy.calculateRisk(request);
 
-    // Save to DynamoDB
     await putItem({
       TableName: "EvidenceRequests",
       Item: request
     });
 
-    // SEND EVENT TO SQS
     await sendMessage({
       type: "REQUEST_CREATED",
       requestId: request.requestId,
-      user: req.user.id
+      user: req.user.email
     });
 
     res.status(201).json(request);
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// GET ALL
+// GET REQUESTS
 export const getEvidenceRequests = async (req, res) => {
   try {
     const data = await getItems({
@@ -63,7 +59,6 @@ export const updateStatus = async (req, res) => {
     const { requestId } = req.params;
     const { currentStatus, newStatus } = req.body;
 
-    // Validate transition
     policy.validateTransition(currentStatus, newStatus);
 
     await putItem({
@@ -75,15 +70,13 @@ export const updateStatus = async (req, res) => {
       }
     });
 
-    // SEND EVENT
     await sendMessage({
       type: "STATUS_UPDATED",
       requestId,
-      newStatus,
-      user: req.user.id
+      newStatus
     });
 
-    res.json({ message: "Status updated" });
+    res.json({ message: "Updated successfully" });
 
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -95,17 +88,12 @@ export const uploadEvidenceFile = async (req, res) => {
   try {
     const fileUrl = req.file.location;
 
-    // SEND EVENT
     await sendMessage({
       type: "FILE_UPLOADED",
-      fileUrl,
-      user: req.user.id
-    });
-
-    res.json({
-      message: "Uploaded successfully",
       fileUrl
     });
+
+    res.json({ fileUrl });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
