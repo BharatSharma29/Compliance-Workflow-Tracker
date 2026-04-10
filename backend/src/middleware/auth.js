@@ -1,8 +1,7 @@
 import jwt from "jsonwebtoken";
 
 /**
- * 🔐 Verify JWT Token Middleware
- * Extracts user info from Cognito token
+ * 🔐 Simple Authentication + Role Logic
  */
 export const verifyToken = (req, res, next) => {
   try {
@@ -15,8 +14,6 @@ export const verifyToken = (req, res, next) => {
     }
 
     const token = header.split(" ")[1];
-
-    // Decode token (no signature verification for simplicity)
     const decoded = jwt.decode(token);
 
     if (!decoded) {
@@ -25,17 +22,19 @@ export const verifyToken = (req, res, next) => {
       });
     }
 
-    // 👇 CLEAN ROLE STRUCTURE (ONLY 2 ROLES)
+    // ✅ SIMPLE ROLE LOGIC (NO COGNITO CONFIG NEEDED)
+    const email = decoded.email;
+
     req.user = {
-      email: decoded.email,
-      role: decoded["custom:role"] || "user" // default role
+      email,
+      role: email === "admin@test.com" ? "admin" : "user"
     };
 
     next();
 
   } catch (error) {
     res.status(500).json({
-      message: "Authentication error",
+      message: "Auth error",
       error: error.message
     });
   }

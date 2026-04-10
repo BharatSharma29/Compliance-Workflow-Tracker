@@ -8,9 +8,6 @@ import Login from "./pages/Login";
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  /**
-   * 🔐 Handle Cognito redirect (id_token flow)
-   */
   useEffect(() => {
     const hash = window.location.hash;
 
@@ -20,19 +17,13 @@ function App() {
 
       if (token) {
         localStorage.setItem("token", token);
-
-        // Clean URL and redirect
         window.location.href = "/";
       }
     }
 
-    const token = localStorage.getItem("token");
-    setIsAuthenticated(!!token);
+    setIsAuthenticated(!!localStorage.getItem("token"));
   }, []);
 
-  /**
-   * 🔒 Protected Route Wrapper
-   */
   const ProtectedRoute = ({ children }) => {
     return isAuthenticated ? children : <Navigate to="/login" />;
   };
@@ -41,26 +32,22 @@ function App() {
     <Router>
       <div>
 
-        {/* 🔹 Navbar */}
         <nav style={{ padding: "10px", background: "#eee" }}>
           {isAuthenticated && (
             <>
               <Link to="/" style={{ marginRight: "10px" }}>Controls</Link>
               <Link to="/evidence" style={{ marginRight: "10px" }}>Evidence</Link>
 
-              <button
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  window.location.href = "/login";
-                }}
-              >
+              <button onClick={() => {
+                localStorage.removeItem("token");
+                window.location.href = "/login";
+              }}>
                 Logout
               </button>
             </>
           )}
         </nav>
 
-        {/* 🔹 Routes */}
         <Routes>
           <Route path="/login" element={<Login />} />
 
