@@ -1,18 +1,43 @@
-import app from "./src/app.js";
-import dotenv from "dotenv";
-
+import express from "express";
+import cors from "cors";
 import path from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config();
+// Routes
+import controlRoutes from "./src/routes/controlRoutes.js";
+import evidenceRoutes from "./src/routes/evidenceRoutes.js";
+import authRoutes from "./src/routes/authRoutes.js";
 
-app.use(express.static(path.resolve("../frontend/dist")));
+const app = express();
 
-app.get("*", (req, res) => {
-  res.sendFile(path.resolve("../frontend/dist/index.html"));
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// API Routes
+app.use("/api/controls", controlRoutes);
+app.use("/api/evidence", evidenceRoutes);
+app.use("/api/auth", authRoutes);
+
+// Health check
+app.get("/", (req, res) => {
+  res.send("Compliance API running 🚀");
 });
 
-const PORT = process.env.PORT || 3000;
+// Serve frontend
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-app.listen(PORT, "0.0.0.0", () => {
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+});
+
+// Start server
+const PORT = 3000;
+
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
