@@ -1,8 +1,7 @@
 import express from "express";
 import {
   getControls,
-  createControl,
-  deleteControl
+  createControl
 } from "../controllers/controlController.js";
 
 import { verifyToken } from "../middleware/auth.js";
@@ -10,11 +9,16 @@ import { requireAdmin } from "../middleware/roles.js";
 
 const router = express.Router();
 
-// All logged-in users
+/**
+ * GET ALL CONTROLS
+ * Any logged-in user
+ */
 router.get("/", verifyToken, getControls);
 
-// Admin only
+/**
+ * CREATE CONTROL
+ * Admin only
+ */
 router.post("/", verifyToken, requireAdmin, createControl);
-router.delete("/:id", verifyToken, requireAdmin, deleteControl);
 
 export default router;
