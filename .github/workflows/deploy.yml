@@ -1,49 +1,98 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline (EC2 Deployment)
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  build-and-check:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+    # 1. Checkout code
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      # =========================
-      # Backend
-      # =========================
-      - name: Install Backend Dependencies
-        run: |
+    # 2. Setup Node
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    # 3. Install backend dependencies
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm install
+
+    # 4. Static Code Analysis (ESLint)
+    - name: Run ESLint
+      run: |
+        cd backend
+        npx eslint . || true
+
+    # 5. Security Scan (npm audit)
+    - name: Run npm audit
+      run: |
+        cd backend
+        npm audit --audit-level=high || true
+
+    # 6. Install frontend dependencies
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm install
+
+    # 7. ✅ Create frontend .env (IMPORTANT FIX)
+    - name: Create frontend .env
+      run: |
+        echo "REACT_APP_API_URL=/api" > frontend/.env
+
+    # 8. Build React app
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+    # 9. Deploy to EC2 via SSH
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+        script: |
+
+          echo "📦 Navigating to project..."
+          cd /home/ubuntu/vehicle-service-tracker
+
+          echo "📦 Pulling latest code..."
+          git fetch origin
+          git reset --hard origin/main
+
+          echo "📦 Installing backend..."
           cd backend
           npm install
 
-      - name: Run ESLint (Backend)
-        run: |
-          cd backend
-          npx eslint . || true
+          echo "🚀 Restarting backend..."
+          pm2 restart server || pm2 start server.js --name server
 
-      - name: Run Security Audit
-        run: |
-          cd backend
-          npm audit --audit-level=moderate || true
+          echo "📦 Preparing frontend..."
+          cd ../frontend
 
-      # =========================
-      # Frontend
-      # =========================
-      - name: Install Frontend Dependencies
-        run: |
-          cd frontend
+          echo "⚙️ Creating .env on EC2..."
+          echo "REACT_APP_API_URL=/api" > .env
+
           npm install
-
-      - name: Build Frontend
-        run: |
-          cd frontend
           npm run build
+
+          echo "🌐 Deploying frontend..."
+          sudo rm -rf /var/www/html/*
+          sudo cp -r build/* /var/www/html/
+
+          echo "🔁 Restarting Nginx..."
+          sudo systemctl restart nginx
+
+          echo "✅ Deployment complete!"
