@@ -1,5 +1,5 @@
 // Routes for Evidence Requests
-// Includes authentication + RBAC + file upload
+// Simplified RBAC: admin + user only
 
 import express from "express";
 import {
@@ -10,25 +10,25 @@ import {
 } from "../controllers/evidenceController.js";
 
 import { verifyToken } from "../middleware/auth.js";
-import { authorize } from "../middleware/role.js";
+import { requireAdmin } from "../middleware/roles.js";
 import { upload } from "../middleware/upload.js";
 
 const router = express.Router();
 
 /**
  * CREATE EVIDENCE REQUEST
- * Allowed roles: Admin, Manager
+ * ✅ Only Admin can create requests
  */
 router.post(
   "/",
   verifyToken,
-  authorize(["Admin", "Manager"]),
+  requireAdmin,
   createEvidenceRequest
 );
 
 /**
  * GET ALL REQUESTS
- * Any authenticated user can view
+ * ✅ Any logged-in user can view
  */
 router.get(
   "/",
@@ -38,23 +38,22 @@ router.get(
 
 /**
  * UPDATE STATUS (WORKFLOW)
- * Allowed roles: Admin, Auditor
+ * ✅ Only Admin can update status
  */
 router.put(
   "/:requestId/status",
   verifyToken,
-  authorize(["Admin", "Auditor"]),
+  requireAdmin,
   updateStatus
 );
 
 /**
  * UPLOAD FILE (S3)
- * Allowed roles: Admin, Manager, User
+ * ✅ Any logged-in user can upload
  */
 router.post(
   "/upload",
   verifyToken,
-  authorize(["Admin", "Manager", "User"]),
   upload.single("file"),
   uploadEvidenceFile
 );
