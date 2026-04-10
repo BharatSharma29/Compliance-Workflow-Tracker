@@ -11,52 +11,39 @@ jobs:
 
     steps:
 
-    # 1. Checkout code
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # 2. Setup Node
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: 18
 
-    # 3. Install backend dependencies
     - name: Install backend dependencies
       run: |
         cd backend
         npm install
 
-    # 4. Static Code Analysis (ESLint)
     - name: Run ESLint
       run: |
         cd backend
         npx eslint . || true
 
-    # 5. Security Scan (npm audit)
     - name: Run npm audit
       run: |
         cd backend
         npm audit --audit-level=high || true
 
-    # 6. Install frontend dependencies
     - name: Install frontend dependencies
       run: |
         cd frontend
         npm install
 
-    # 7. Create frontend .env (IMPORTANT FIX)
-    - name: Create frontend .env
-      run: |
-        echo "REACT_APP_API_URL=/api" > frontend/.env
-
-    # 8. Build React app
     - name: Build frontend
       run: |
         cd frontend
         npm run build
 
-    # 9. Deploy to EC2 via SSH
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -66,7 +53,7 @@ jobs:
         script: |
 
           echo "📦 Navigating to project..."
-          cd /home/ubuntu/vehicle-service-tracker
+          cd /home/ubuntu/Compliance-Workflow-Tracker
 
           echo "📦 Pulling latest code..."
           git fetch origin
@@ -77,22 +64,11 @@ jobs:
           npm install
 
           echo "🚀 Restarting backend..."
-          pm2 restart server || pm2 start server.js --name server
+          pm2 restart backend || pm2 start server.js --name backend
 
-          echo "📦 Preparing frontend..."
+          echo "📦 Building frontend..."
           cd ../frontend
-
-          echo "⚙️ Creating .env on EC2..."
-          echo "REACT_APP_API_URL=/api" > .env
-
           npm install
           npm run build
 
-          echo "🌐 Deploying frontend..."
-          sudo rm -rf /var/www/html/*
-          sudo cp -r build/* /var/www/html/
-
-          echo "🔁 Restarting Nginx..."
-          sudo systemctl restart nginx
-
-          echo "✅ Deployment complete!"
+          echo "🔁 Restart complete!"
