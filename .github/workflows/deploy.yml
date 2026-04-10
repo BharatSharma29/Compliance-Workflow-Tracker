@@ -45,7 +45,7 @@ jobs:
         cd frontend
         npm install
 
-    # 7. ✅ Create frontend .env (IMPORTANT FIX)
+    # 7. Create frontend .env (IMPORTANT FIX)
     - name: Create frontend .env
       run: |
         echo "REACT_APP_API_URL=/api" > frontend/.env
