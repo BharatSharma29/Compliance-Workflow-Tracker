@@ -1,18 +1,27 @@
-// Middleware to handle file uploads to S3
-
 import multer from "multer";
 import multerS3 from "multer-s3";
-import { s3 } from "../config/s3.js";
+import AWS from "aws-sdk";
+import dotenv from "dotenv";
 
-// Configure multer to upload directly to S3
+dotenv.config();
+
+// Configure AWS
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION
+});
+
+const s3 = new AWS.S3();
+
+// Upload to S3
 export const upload = multer({
   storage: multerS3({
     s3: s3,
-    bucket: process.env.S3_BUCKET_NAME,
-    acl: "public-read", // makes file accessible via URL
+    bucket: process.env.AWS_BUCKET_NAME,
+    acl: "public-read",
     key: function (req, file, cb) {
-      // Unique file name
-      const fileName = Date.now() + "-" + file.originalname;
+      const fileName = Date.now().toString() + "-" + file.originalname;
       cb(null, fileName);
     }
   })

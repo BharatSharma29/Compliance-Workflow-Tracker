@@ -7,6 +7,8 @@ import { fileURLToPath } from "url";
 import controlRoutes from "./src/routes/controlRoutes.js";
 import evidenceRoutes from "./src/routes/evidenceRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 
