@@ -1,11 +1,10 @@
 import axios from "axios";
 
-const API = axios.create({
+const api = axios.create({
   baseURL: "http://23.20.243.30:3000/api"
 });
 
-// Attach token to every request
-API.interceptors.request.use((config) => {
+api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
   if (token) {
@@ -15,18 +14,13 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-export default API;
+export const getControls = () => api.get("/controls");
+export const createControl = (data) => api.post("/controls", data);
 
-// Controls
-export const getControls = () => API.get("/controls");
-export const createControl = (data) => API.post("/controls", data);
+export const getEvidenceRequests = () => api.get("/evidence");
+export const createEvidenceRequest = (data) => api.post("/evidence", data);
 
-// Evidence
-export const getEvidence = () => API.get("/evidence");
-export const createEvidence = (data) => API.post("/evidence", data);
-
-// Upload
 export const uploadFile = (formData) =>
-  API.post("/evidence/upload", formData, {
-    headers: { "Content-Type": "multipart/form-data" }
-  });
+  api.post("/evidence/upload", formData);
+
+export default api;

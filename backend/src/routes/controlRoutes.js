@@ -1,36 +1,36 @@
-// Routes for Controls
-// Includes authentication + role-based access control (RBAC)
-
 import express from "express";
 import {
+  getControls,
   createControl,
-  getControls
+  deleteControl
 } from "../controllers/controlController.js";
 
 import { verifyToken } from "../middleware/auth.js";
-import { authorize } from "../middleware/role.js";
+import { requireAdmin } from "../middleware/roles.js";
 
 const router = express.Router();
 
 /**
- * CREATE CONTROL
- * Only Admin users are allowed
+ * ===============================
+ * 🔓 PUBLIC / AUTHENTICATED ROUTES
+ * ===============================
  */
-router.post(
-  "/",
-  verifyToken,              // Step 1: Verify JWT token from Cognito
-  authorize(["Admin"]),     // Step 2: Allow only Admin role
-  createControl             // Step 3: Execute controller
-);
+
+// 👉 Get all controls (any logged-in user)
+router.get("/", verifyToken, getControls);
+
 
 /**
- * GET ALL CONTROLS
- * All authenticated users can view controls
+ * ===============================
+ * 🔐 ADMIN-ONLY ROUTES
+ * ===============================
  */
-router.get(
-  "/",
-  verifyToken,              // Must be logged in
-  getControls
-);
+
+// 👉 Create new control (ONLY admin)
+router.post("/", verifyToken, requireAdmin, createControl);
+
+// 👉 Delete control (ONLY admin)
+router.delete("/:id", verifyToken, requireAdmin, deleteControl);
+
 
 export default router;

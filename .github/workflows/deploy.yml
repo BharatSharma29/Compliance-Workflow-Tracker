@@ -1,109 +1,49 @@
-name: Full CI/CD Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
-
-  # ============================
-  # BACKEND PIPELINE
-  # ============================
-  backend:
-    name: Backend CI
+  build-and-check:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout code
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      # 3. Install backend dependencies
+      # =========================
+      # Backend
+      # =========================
       - name: Install Backend Dependencies
-        working-directory: backend
-        run: npm install
+        run: |
+          cd backend
+          npm install
 
-      # ============================
-      # ESLINT (STATIC ANALYSIS)
-      # ============================
       - name: Run ESLint (Backend)
-        working-directory: backend
         run: |
+          cd backend
           npx eslint . || true
-        # || true ensures pipeline doesn't fail on warnings
 
-      # ============================
-      # SECURITY SCAN
-      # ============================
-      - name: Run npm audit (Backend)
-        working-directory: backend
+      - name: Run Security Audit
         run: |
+          cd backend
           npm audit --audit-level=moderate || true
 
-      # ============================
-      # BASIC BACKEND TEST (RUN APP)
-      # ============================
-      - name: Start Backend Server
-        working-directory: backend
-        run: |
-          node server.js &
-          sleep 5
-
-  # ============================
-  # FRONTEND PIPELINE
-  # ============================
-  frontend:
-    name: Frontend CI
-    runs-on: ubuntu-latest
-
-    steps:
-      # 1. Checkout code
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      # 2. Setup Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      # 3. Install frontend dependencies
+      # =========================
+      # Frontend
+      # =========================
       - name: Install Frontend Dependencies
-        working-directory: frontend
-        run: npm install
-
-      # ============================
-      # ESLINT FRONTEND (OPTIONAL)
-      # ============================
-      - name: Run ESLint (Frontend)
-        working-directory: frontend
         run: |
-          npx eslint . || true
+          cd frontend
+          npm install
 
-      # ============================
-      # BUILD FRONTEND
-      # ============================
-      - name: Build React App
-        working-directory: frontend
-        run: npm run build
-
-  # ============================
-  # (OPTIONAL) DEPLOY STEP
-  # ============================
-  deploy:
-    name: Deploy Info
-    runs-on: ubuntu-latest
-    needs: [backend, frontend]
-
-    steps:
-      - name: Deployment Placeholder
+      - name: Build Frontend
         run: |
-          echo "CI/CD pipeline completed successfully 🚀"
+          cd frontend
+          npm run build

@@ -1,23 +1,23 @@
-// Role-Based Access Control (RBAC)
-// Checks if user belongs to required Cognito group
+/**
+ * 🔐 Role-Based Access Control Middleware
+ * Only allows admin users
+ */
 
-export const authorize = (roles) => {
-  return (req, res, next) => {
-
-    // Get user groups from token
-    const userGroups = req.user["cognito:groups"] || [];
-
-    // Check if user has at least one required role
-    const isAllowed = roles.some((role) =>
-      userGroups.includes(role)
-    );
-
-    if (!isAllowed) {
+export const requireAdmin = (req, res, next) => {
+  try {
+    // Check if user exists and has role
+    if (!req.user || req.user.role !== "admin") {
       return res.status(403).json({
-        message: "Access denied: insufficient permissions"
+        message: "Access denied: Admin only"
       });
     }
 
     next();
-  };
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Error in role validation",
+      error: error.message
+    });
+  }
 };

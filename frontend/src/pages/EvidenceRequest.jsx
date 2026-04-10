@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { getEvidence, createEvidence, uploadFile } from "../services/api";
+import {
+  getEvidenceRequests,
+  createEvidenceRequest
+} from "../services/api";
 
 function EvidenceRequests() {
   const [requests, setRequests] = useState([]);
@@ -11,7 +14,7 @@ function EvidenceRequests() {
 
   // Fetch all evidence requests
   const fetchData = async () => {
-    const res = await getEvidence();
+    const res = await getEvidenceRequests();
     setRequests(res.data);
   };
 
@@ -22,7 +25,7 @@ function EvidenceRequests() {
   // Create request
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await createEvidence(form);
+    await createEvidenceRequest(form);
     fetchData();
   };
 
