@@ -8,7 +8,7 @@ api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = token; // simple
   }
 
   return config;
@@ -19,8 +19,5 @@ export const createControl = (data) => api.post("/controls", data);
 
 export const getEvidenceRequests = () => api.get("/evidence");
 export const createEvidenceRequest = (data) => api.post("/evidence", data);
-
-export const uploadFile = (formData) =>
-  api.post("/evidence/upload", formData);
 
 export default api;
